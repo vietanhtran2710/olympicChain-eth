@@ -5,11 +5,21 @@ let rewardInstance, contestInstance;
 
 let contractAddress, contestId;
 
+function unpack(str) {
+    var bytes = [];
+    for(var i = 0; i < str.length; i++) {
+        var char = str.charCodeAt(i);
+        bytes.push(char >>> 8);
+        bytes.push(char & 0xFF);
+    }
+    return bytes;
+}
+
 contract('Contracts', function (accounts) {
     it("Contracts deployment", function() {
         return olpReward.deployed().then(function(instance) {
             rewardInstance = instance;
-            assert(rewardInstance != undefined, "OLPProcessReward should be defined/deployed");
+            assert(rewardInstance != undefined, "OLPReward should be defined/deployed");
         })
         .then(function() {
             return contest.deployed().then(function(instance) {
@@ -109,7 +119,7 @@ contract('Contracts', function (accounts) {
     })
 
     it("Contest Reward test", async function() {
-        tx = await contestInstance.createNewContest({from: accounts[0]});
+        tx = await contestInstance.createNewContest(unpack("ABCD"), {from: accounts[0]});
         contestId = tx.logs[1]['args']['0'];
         return contestInstance.getNumberOfContests({from: accounts[0]})
         .then(async function(result) {
@@ -122,9 +132,8 @@ contract('Contracts', function (accounts) {
             await rewardInstance.addStudent(accounts[5], {from: accounts[0]})
             await contestInstance.registerStudent(accounts[5], contestId, {from: accounts[0]})
             await contestInstance.registerStudent(accounts[1], contestId, {from: accounts[0]})
-            await contestInstance.startContest(contestId, {from: accounts[0]})
-            await contestInstance.updateGrade(contestId, accounts[5], 9, {from: accounts[0]})
-            await contestInstance.updateGrade(contestId, accounts[1], 10, {from: accounts[0]})
+            await contestInstance.gradeSubmission(contestId, accounts[5], unpack("ABCD"), 11, {from: accounts[0]})
+            await contestInstance.gradeSubmission(contestId, accounts[1], unpack("ABCD"), 10, {from: accounts[0]})
             await contestInstance.endContest(contestId, {from: accounts[0]})
             return rewardInstance.balanceOf(accounts[1], 1, {from: accounts[0]})
         })

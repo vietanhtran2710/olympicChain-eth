@@ -15,11 +15,6 @@ contract OLPContestFactory is Ownable {
     mapping(address => Contest) contests;
     OLPReward olpContract;
     address olpAddress;
-    enum Stages {
-        REGISTER,
-        ON_GOING,
-        FINISHED
-    }
     uint256 totalContest = 0;
 
     constructor(address olpContractAddress) {
@@ -27,19 +22,18 @@ contract OLPContestFactory is Ownable {
         olpAddress = olpContractAddress;
     }
 
-    function createNewContest() public onlyOwner returns (address) {
+    function createNewContest(bytes[] memory answers) public onlyOwner returns (address) {
         bytes32 tmpData = keccak256(
             abi.encodePacked(msg.sender, block.timestamp)
         );
         address tokenId = address(bytes20(tmpData));
-        contests[tokenId] = new Contest();
+        contests[tokenId] = new Contest(answers);
         totalContest++;
         emit CreatedContest(tokenId);
         return tokenId;
     }
 
     function endContest(address contestId) public onlyOwner {
-        contests[contestId].endContest();
         address winner = contests[contestId].getTopWinner();
 
         // Send reward (from contract's balance) the to winner.
@@ -58,24 +52,13 @@ contract OLPContestFactory is Ownable {
         olpContract.withdrawBatchFromContract(winner, ids, amounts, "");
     }
 
-    function startContest(address contestId) public onlyOwner {
-        contests[contestId].finishRegister();
-    }
-
-    function updateGrade(
+    function gradeSubmission(
         address contestId,
         address student,
-        uint256 grade
+        bytes[] memory submission,
+        uint256 time
     ) public onlyOwner {
-        contests[contestId].updateGrade(student, grade);
-    }
-
-    function updateBatchGrade(
-        address contestId,
-        address[] memory students,
-        uint256[] memory grades
-    ) public onlyOwner {
-        contests[contestId].updateBatchGrade(students, grades);
+        contests[contestId].gradeSubmission(student, submission, time);
     }
 
     // Sponsors call this function.
@@ -146,14 +129,6 @@ contract OLPContestFactory is Ownable {
         return totalContest;
     }
 
-    function getContestStageOf(address contestId)
-        public
-        view
-        returns (uint256)
-    {
-        return contests[contestId].getStage();
-    }
-
     function getContestants(address contestId)
         public
         view
@@ -165,7 +140,7 @@ contract OLPContestFactory is Ownable {
     function getContestantsGrade(address contestId)
         public
         view
-        returns (uint256[] memory)
+        returns (Contest.Result[] memory)
     {
         return contests[contestId].getStudentResults();
     }
