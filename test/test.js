@@ -79,6 +79,26 @@ contract('Contracts', function (accounts) {
     })
 
     it("VNH Token mint test", function() {
+        return rewardInstance.mintVNH(accounts[3], 110, [], {from: accounts[0]})
+        .then(function(result) {
+            return rewardInstance.balanceOf(accounts[3], 1, {from: accounts[0]}).
+            then(function(result) {
+                assert.equal(110, result.toNumber(), "VNH Token should be minted");
+            });
+        })
+    })
+
+    it("VNH Token burn test", function() {
+        return rewardInstance.burnVNH(accounts[3], 10, {from: accounts[0]})
+        .then(function(result) {
+            return rewardInstance.balanceOf(accounts[3], 1, {from: accounts[0]}).
+            then(function(result) {
+                assert.equal(100, result.toNumber(), "VNH Token should be burnt");
+            });
+        })
+    })
+
+    it("VNH Token mint test 2", function() {
         return rewardInstance.mintVNH(accounts[4], 100, [], {from: accounts[0]})
         .then(function(result) {
             return rewardInstance.balanceOf(accounts[4], 1, {from: accounts[0]}).
@@ -89,7 +109,7 @@ contract('Contracts', function (accounts) {
     })
 
     it("Process Reward negative test case", function() {
-        return rewardInstance.createStudyProgressReward(accounts[1], 110, 10, {from: accounts[4]})
+        return rewardInstance.createStudyProgressReward(accounts[1], 110, 10, {from: accounts[3]})
         .then(function(result) {
             throw("Condition not implemented in Smart Contract");
         }).catch(function (e) {
@@ -102,11 +122,11 @@ contract('Contracts', function (accounts) {
     })
 
     it("Process Reward positive test case", async function() {
-        return rewardInstance.createStudyProgressReward(accounts[1], 40, 20, {from: accounts[4]})
+        return rewardInstance.createStudyProgressReward(accounts[1], 40, 20, {from: accounts[3]})
         .then(function(result) {
             return rewardInstance.kngTokenProcessReward(accounts[1], {from: accounts[0]})
             .then(function(result) {
-                return rewardInstance.balanceOf(accounts[4], 1, {from: accounts[0]})
+                return rewardInstance.balanceOf(accounts[3], 1, {from: accounts[0]})
                 .then(function(result) {
                     assert.equal(60, result.toNumber(), "VNH reward should have transferred");
                     return rewardInstance.balanceOf(accounts[1], 1, {from: accounts[1]})
@@ -128,7 +148,7 @@ contract('Contracts', function (accounts) {
             return rewardInstance.balanceOf(accounts[4], 1, {from: accounts[4]})
         })
         .then(async function(result) {
-            assert.equal(0, result.toNumber(), "Rewards should be transferred");
+            assert.equal(40, result.toNumber(), "Rewards should be transferred");
             await rewardInstance.addStudent(accounts[5], {from: accounts[0]})
             await contestInstance.registerStudent(accounts[5], contestId, {from: accounts[0]})
             await contestInstance.registerStudent(accounts[1], contestId, {from: accounts[0]})

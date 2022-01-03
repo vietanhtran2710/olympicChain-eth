@@ -52,6 +52,10 @@ contract OLPERC1155 is
         _mint(_account, VNH_ID, _amount, data);
     }
 
+    function burnVNH(address _account, uint256 _amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _burn(_account, VNH_ID, _amount);
+    }
+
     function setURI(string memory newuri) public onlyRole(URI_SETTER_ROLE) {
         _setURI(newuri);
     }
