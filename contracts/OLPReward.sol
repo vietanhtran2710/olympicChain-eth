@@ -16,7 +16,7 @@ contract OLPReward is OLPERC1155 {
         address student,
         uint256 vnhReward,
         uint256 requiredKNG
-    ) public onlyRole(SPONSOR_ROLE) {
+    ) public onlyRole(PARENT_ROLE) {
         safeTransferFrom(_msgSender(), address(this), VNH_ID, vnhReward, "");
         studyProgressReward[student].push(
             Reward({
