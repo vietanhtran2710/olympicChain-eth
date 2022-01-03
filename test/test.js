@@ -138,13 +138,29 @@ contract('Contracts', function (accounts) {
         })
     })
 
+    it("NFT test", async function() {
+        await rewardInstance.createNFT(accounts[4], "Title;link;value", {from: accounts[0]});
+        return rewardInstance.balanceOf(accounts[4], 2, {from: accounts[4]})
+        .then(function(result) {
+            assert.equal(1, result.toNumber(), "NFT should be minted");
+            return rewardInstance.uri(2, {from: accounts[4]})
+            .then(function(result) {
+                assert.equal("Title;link;value", result, "Wrong URI");
+                return rewardInstance.getOwnedNFTs(accounts[4], {from: accounts[4]})
+                .then(function(result) {
+                    assert.deepEqual([ 2 ], result[0].words.filter(n => n), "Wrong owned NFT list");
+                })
+            })
+        })
+    })
+
     it("Contest Reward test", async function() {
         tx = await contestInstance.createNewContest(unpack("ABCD"), {from: accounts[0]});
         contestId = tx.logs[1]['args']['0'];
         return contestInstance.getNumberOfContests({from: accounts[0]})
         .then(async function(result) {
             assert.equal(1, result.toNumber(), "Contest should be created");
-            await contestInstance.registerReward(contestId, 60, [], {from: accounts[4]});
+            await contestInstance.registerReward(contestId, 60, [2], {from: accounts[4]});
             return rewardInstance.balanceOf(accounts[4], 1, {from: accounts[4]})
         })
         .then(async function(result) {
@@ -159,9 +175,14 @@ contract('Contracts', function (accounts) {
         })
         .then(function(result) {
             assert.equal(100, result.toNumber(), "Rewards should be transferred to winner");
+            return rewardInstance.balanceOf(accounts[1], 2, {from: accounts[1]})
+        })
+        .then(function(result) {
+            assert.equal(1, result.toNumber(), "NFT should be transferred to winnder");
+            return rewardInstance.getOwnedNFTs(accounts[1], {from: accounts[1]})
+            .then(function(result) {
+                assert.deepEqual([ 2 ], result[0].words.filter(n => n), "Wrong owned NFT list");
+            })
         })
     })
-
-
-    
 });

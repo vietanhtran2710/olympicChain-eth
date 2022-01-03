@@ -16,6 +16,7 @@ contract OLPERC1155 is
     uint256 public constant VNH_ID = 1;
 
     mapping(uint256=>string) private _uris;
+    mapping(address=>uint256) private nftCount;
 
     constructor() ERC1155("") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -39,6 +40,7 @@ contract OLPERC1155 is
         );
         _mint(_owner, _currentTokenId, 1, "");
         setTokenUri(_currentTokenId, _uri);
+        nftCount[_owner] += 1;
         _currentTokenId++;
 
         return _currentTokenId;
@@ -134,5 +136,22 @@ contract OLPERC1155 is
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    function getOwnedNFTs(address owner) public view returns (uint256[] memory) {
+        uint256 count = 0;
+        for (uint256 i = 2; i < _currentTokenId; i++) {
+            if (balanceOf(owner, i) == 1) {
+                count++;
+            }
+        }
+        uint256[] memory nfts = new uint256[](count);
+        uint256 index = 0;
+        for (uint256 i = 0; i < _currentTokenId; i++) {
+            if (balanceOf(owner, i) == 1) {
+                nfts[index] = i; index++;
+            }
+        }
+        return nfts;
     }
 }
